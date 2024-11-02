@@ -1,0 +1,92 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+}
+
+.container {
+    width: 90%;
+    max-width: none; /* Remover a largura máxima */
+    margin: 20px auto;
+    padding: 10px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+
+h1 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.category {
+    margin-bottom: 15px;
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    background: #eeeeee;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.category-header h2 {
+    font-size: 1rem;
+}
+
+.items-list {
+    margin-top: 10px;
+    padding-left: 20px;
+}
+
+.item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    background: #fafafa;
+    margin-bottom: 5px;
+    border-radius: 4px;
+}
+
+.item-name {
+    flex: 1;
+}
+
+.item-actions {
+    display: flex;
+    gap: 10px;
+}
+
+button {
+    cursor: pointer;
+    background-color: #007bff; /* Cor azul para outros botões */
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+button:hover {
+    background-color: #0056b3; /* Cor azul escuro ao passar o mouse */
+}
+
+/* Estilos específicos para o botão de exclusão (lixeira) */
+button.delete {
+    background-color: #cccccc; /* Fundo cinza claro */
+    color: #666666; /* Cor do ícone de lixeira em cinza */
+    padding: 6px;
+}
+
+button.delete:hover {
+    background-color: #aaaaaa; /* Cinza mais escuro ao passar o mouse */
+}
