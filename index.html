@@ -1,1 +1,365 @@
-teste
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rifa</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e6f7ff;
+            background-image: url('back.jpg'); /* URL da imagem de fundo */
+            background-size: cover; /* Ajustar a imagem */
+            background-repeat: no-repeat; /* Não repetir a imagem */
+            background-attachment: fixed; /* Fundo fixo ao rolar a página */
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        h2 {
+            color: #3399ff;
+            font-size: 24px; /* Tamanho do título */
+            display: inline-block;
+            vertical-align: middle;
+            margin: 20px 0;
+        }
+        .title-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .title-container img {
+            height: 50px; /* Altura da imagem do urso */
+            margin-left: 10px;
+        }
+        table {
+            width: 90%;
+            margin: auto;
+            border-collapse: collapse;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            border: 1px solid #b3d9ff;
+            padding: 10px;
+            cursor: pointer;
+        }
+        th {
+            background-color: #b3d9ff;
+            color: #fff;
+            font-size: 18px; /* Tamanho do título das tabelas */
+        }
+        td {
+            background-color: #e6f2ff;
+            font-size: 14px; /* Tamanho da fonte das informações da tabela da rifa */
+        }
+        td:hover:not(.reserved) {
+            background-color: #cce6ff;
+        }
+        .reserved {
+            background-color: #99ccff;
+            pointer-events: none;
+        }
+        .reserved:hover {
+            cursor: default;
+        }
+        .reservation-table {
+            width: 90%;
+            margin: auto;
+            margin-top: 20px;
+            border-collapse: collapse;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .reservation-table th {
+            background-color: #3399ff; /* Cor mais escura */
+            color: white; /* Fonte branca */
+            text-align: center; /* Centralizado */
+            font-size: 18px; /* Tamanho do título das reservas */
+        }
+        .reservation-table td {
+            border: 1px solid #b3d9ff;
+            padding: 5px;
+            text-align: center; /* Centralizado por padrão */
+            background-color: #99ccff;
+            font-size: 14px; /* Tamanho da fonte das informações da tabela de reservas */
+        }
+        .reservation-table td.name {
+            text-align: left; /* Alinhar à esquerda apenas as células de nome */
+        }
+        .footer {
+            background-color: #3399ff;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-size: 12px; /* Tamanho pequeno para o rodapé */
+        }
+        .info-box {
+            background-color: #b3d9ff;
+            border: 2px dashed #3399ff;
+            border-radius: 10px;
+            padding: 20px;
+            width: 80%;
+            margin: 20px auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: left;
+        }
+        .info-box h3 {
+            color: #3399ff;
+            font-size: 20px;
+        }
+        .info-box p {
+            color: #333;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .info-box img {
+            width: 50px;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #3399ff;
+        }
+		
+		        .map-container {
+            width: 100%;
+            height: 300px; /* Ajuste a altura conforme necessário */
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Estilo para o iframe */
+        .map-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+    </style>
+    <!-- Adicionando a biblioteca Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script>
+        // Configuração do Firebase
+        var firebaseConfig = {
+            apiKey: "AIzaSyDVrPIha9YklOXKbvItEE70ZxSfuodtsJ0",
+            authDomain: "rifa-ea336.firebaseapp.com",
+            databaseURL: "https://rifa-ea336-default-rtdb.firebaseio.com",
+            projectId: "Rifa",
+            storageBucket: "SEU_STORAGE_BUCKET",
+            messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+            appId: "Rifa"
+        };
+        // Inicializando Firebase
+        firebase.initializeApp(firebaseConfig);
+        var database = firebase.database();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const cells = document.querySelectorAll('td[data-number]');
+
+            cells.forEach(cell => {
+                cell.addEventListener('click', () => {
+                    const number = cell.getAttribute('data-number');
+                    if (cell.classList.contains('reserved')) {
+                        showReservationInfo(number);
+                    } else {
+                        const name = prompt('DIGITE SEU NOME:');
+                        if (name) {
+                            reserveNumber(number, cell, name);
+                        }
+                    }
+                });
+            });
+
+            loadReservedNumbers();
+        });
+
+        function reserveNumber(number, cell, name) {
+            database.ref('reserved/' + number).set({ reserved: true, name: name }, (error) => {
+                if (error) {
+                    console.error('Erro ao reservar número:', error);
+                } else {
+                    cell.classList.add('reserved');
+                    updateReservationTable();
+                }
+            });
+        }
+
+        function loadReservedNumbers() {
+            database.ref('reserved').once('value').then((snapshot) => {
+                snapshot.forEach((childSnapshot) => {
+                    const number = childSnapshot.key;
+                    const data = childSnapshot.val();
+                    if (data.reserved) {
+                        const cell = document.querySelector(`td[data-number='${number}']`);
+                        if (cell) {
+                            cell.classList.add('reserved');
+                        }
+                    }
+                });
+                updateReservationTable();
+            }).catch((error) => {
+                console.error('Erro ao carregar números reservados:', error);
+            });
+        }
+
+        function showReservationInfo(number) {
+            database.ref('reserved/' + number).once('value').then((snapshot) => {
+                const data = snapshot.val();
+                if (data && data.name) {
+                    alert(`Número reservado por: ${data.name}`);
+                } else {
+                    alert('Informação de reserva não encontrada.');
+                }
+            }).catch((error) => {
+                console.error('Erro ao carregar informação de reserva:', error);
+            });
+        }
+
+        function updateReservationTable() {
+            database.ref('reserved').once('value').then((snapshot) => {
+                const reservationTableBody = document.getElementById('reservationTableBody');
+                reservationTableBody.innerHTML = ''; // Limpa a tabela antes de preenchê-la novamente
+                snapshot.forEach((childSnapshot) => {
+                    const number = childSnapshot.key;
+                    const data = childSnapshot.val();
+                    if (data.reserved) {
+                        const row = document.createElement('tr');
+                        const numberCell = document.createElement('td');
+                        const nameCell = document.createElement('td');
+                        numberCell.textContent = number;
+                        nameCell.textContent = data.name;
+                        nameCell.classList.add('name');
+                        row.appendChild(numberCell);
+                        row.appendChild(nameCell);
+                        reservationTableBody.appendChild(row);
+                    }
+                });
+            }).catch((error) => {
+                console.error('Erro ao carregar a tabela de reservas:', error);
+            });
+        }
+    </script>
+</head>
+<body>
+
+<div class="title-container">
+    <h2>Chá rifa do Luan</h2>
+    <img src="urso.png" alt="Urso">
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th colspan="5">Número / Tamanho da Fralda</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td data-number="1">1 - P</td>
+            <td data-number="2">2 - M</td>
+            <td data-number="3">3 - P</td>
+            <td data-number="4">4 - G</td>
+            <td data-number="5">5 - RN</td>
+        </tr>
+        <tr>
+            <td data-number="6">6 - P</td>
+            <td data-number="7">7 - RN</td>
+            <td data-number="8">8 - M</td>
+            <td data-number="9">9 - P</td>
+            <td data-number="10">10 - M</td>
+        </tr>
+        <tr>
+            <td data-number="11">11 - P</td>
+            <td data-number="12">12 - P</td>
+            <td data-number="13">13 - M</td>
+            <td data-number="14">14 - M</td>
+            <td data-number="15">15 - G</td>
+        </tr>
+        <tr>
+            <td data-number="16">16 - RN</td>
+            <td data-number="17">17 - P</td>
+            <td data-number="18">18 - M</td>
+            <td data-number="19">19 - P</td>
+            <td data-number="20">20 - M</td>
+        </tr>
+        <tr>
+            <td data-number="21">21 - M</td>
+            <td data-number="22">22 - M</td>
+            <td data-number="23">23 - G</td>
+            <td data-number="24">24 - M</td>
+            <td data-number="25">25 - M</td>
+        </tr>
+        <tr>
+            <td data-number="26">26 - P</td>
+            <td data-number="27">27 - M</td>
+            <td data-number="28">28 - M</td>
+            <td data-number="29">29 - RN</td>
+            <td data-number="30">30 - M</td>
+        </tr>
+        <tr>
+            <td data-number="31">31 - M</td>
+            <td data-number="32">32 - P</td>
+            <td data-number="33">33 - P</td>
+            <td data-number="34">34 - P</td>
+            <td data-number="35">35 - RN</td>
+        </tr>
+        <tr>
+            <td data-number="36">36 - M</td>
+            <td data-number="37">37 - P</td>
+            <td data-number="38">38 - M</td>
+            <td data-number="39">39 - RN</td>
+            <td data-number="40">40 - G</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="info-box">
+    <p>Estamos muito felizes em convidá-lo para o chá rifa do nosso querido Luan! 🎉👶🏻</p>
+    <p><center>Mimos são bem vindos! 🥰</center></p>
+    <br>
+    <p><span class="highlight">Orientações:</span></p>
+    <p><u>Prêmio:</u> <b>R$ 200,00</b></p>
+    <p><u>Data do sorteio:</u> <b>24/08/2024 - Sábado</b></p>
+    <p><u>Data da entrega (FRALDA):</u> <b>até 17/08/2024 - Sábado</b></p>
+    <p><u>Local da entrega (FRALDA):</u> <b><a href="https://maps.app.goo.gl/fTTqVJ5gqofk35CY7">Rua César Cantu, 64 - Vila Prodente</a></b></p>
+    
+    <div class="map-container">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3656.79411748482!2d-46.586974221232204!3d-23.57583670741295!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce5c1ae5e5285b%3A0x506b05b5565e0bea!2sRua%20C%C3%A9sar%20Cantu%2C%2064%20-%20Vila%20Prudente%2C%20S%C3%A3o%20Paulo%20-%20SP%2C%2003137-120!5e0!3m2!1spt-BR!2sbr!4v1722390660349!5m2!1spt-BR!2sbr" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+    
+</div>
+
+
+<br><br>
+
+<h2>Reservas</h2>
+
+<table class="reservation-table">
+    <thead>
+        <tr>
+            <th>Número:</th>
+            <th>Nome:</th>
+        </tr>
+    </thead>
+    <tbody id="reservationTableBody">
+        <!-- Linhas de reserva serão inseridas aqui -->
+    </tbody>
+</table>
+<br>
+<div class="footer">
+    Desenvolvedor: Iago Oliveira
+</div>
+
+</body>
+</html>
